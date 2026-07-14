@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JMV LPS Limited | Infrastructure Intelligence</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#121212;
+    --bg-panel:#1A1A1A;
+    --bg-footer:#0B0B0B;
+    --navy:#0A2540;
+    --navy-light:#12385f;
+    --crimson:#C8102E;
+    --crimson-dim:#7a0c1d;
+    --ink:#E9EAEA;
+    --ink-mute:#8A8F98;
+    --line:#2A2D31;
+    --ok:#3ECF8E;
+    --warn:#F2B33D;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    background:var(--bg-deep);
+    color:var(--ink);
+    font-family:'Inter',sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .font-display{font-family:'Space Grotesk',sans-serif;}
+  .font-mono{font-family:'JetBrains Mono',monospace;}
+  .tracking-wide2{letter-spacing:0.14em;}
+  .tracking-wide3{letter-spacing:0.22em;}
+
+  a:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible{
+    outline:2px solid var(--crimson);
+    outline-offset:2px;
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important;}
+  }
+
+  /* Ticker */
+  .ticker-track{
+    display:flex;
+    width:max-content;
+    animation:ticker-scroll 30s linear infinite;
+  }
+  @keyframes ticker-scroll{
+    0%{transform:translateX(0);}
+    100%{transform:translateX(-50%);}
+  }
+  .ticker-dot{
+    display:inline-block;width:5px;height:5px;border-radius:50%;
+    background:var(--crimson);margin:0 1.1rem;flex-shrink:0;
+  }
+
+  .grid-texture{
+    background-image:
+      linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size:42px 42px;
+  }
+  .hairline{border-color:var(--line);}
+
+  /* ===== Mega menu / dropdowns ===== */
+  .nav-item{position:relative;}
+  .nav-panel{
+    position:absolute; top:calc(100% + 14px); left:0;
+    background:#151719; border:1px solid var(--line);
+    box-shadow:0 30px 60px -20px rgba(0,0,0,0.6);
+    opacity:0; visibility:hidden; transform:translateY(6px);
+    transition:opacity .2s ease, transform .2s ease, visibility .2s ease;
+    z-index:60;
+  }
+  .nav-item:hover .nav-panel, .nav-item.js-open .nav-panel{
+    opacity:1; visibility:visible; transform:translateY(0);
+  }
+  .nav-caret{transition:transform .2s ease; font-size:9px;}
+  .nav-item:hover .nav-caret, .nav-item.js-open .nav-caret{transform:rotate(180deg);}
+
+  .mega-col-title{
+    font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:0.14em;
+    text-transform:uppercase; color:var(--crimson);
+  }
+
+  /* Terminal / Signature element */
+  .terminal-shell{
+    background:radial-gradient(ellipse at top left, #16233a 0%, #0d1420 46%, #0a0e16 100%);
+    border:1px solid #22344f;
+    box-shadow: 0 0 0 1px rgba(200,16,46,0.06), 0 30px 70px -20px rgba(0,0,0,0.7);
+  }
+  .terminal-scanline{
+    position:absolute; inset:0; pointer-events:none;
+    background:repeating-linear-gradient(to bottom, rgba(255,255,255,0.018) 0px, rgba(255,255,255,0.018) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:overlay;
+  }
+  .radar-wrap{position:relative;width:100%;height:100%;}
+  .radar-ring{
+    position:absolute; border:1px solid rgba(62,207,142,0.18); border-radius:50%;
+    top:50%; left:50%; transform:translate(-50%,-50%);
+  }
+  .radar-sweep{
+    position:absolute; top:50%; left:50%; width:50%; height:1px;
+    transform-origin:0 0;
+    background:linear-gradient(90deg, rgba(62,207,142,0.85), rgba(62,207,142,0));
+    animation:sweep 4s linear infinite;
+    filter:drop-shadow(0 0 6px rgba(62,207,142,0.6));
+  }
+  @keyframes sweep{ from{transform:translate(0,0) rotate(0deg);} to{transform:translate(0,0) rotate(360deg);} }
+  .node{
+    position:absolute; width:7px; height:7px; border-radius:50%;
+    background:var(--ok); animation:node-pulse 3.2s ease-in-out infinite;
+  }
+  @keyframes node-pulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(62,207,142,0.55); opacity:0.55;}
+    50%{box-shadow:0 0 0 7px rgba(62,207,142,0); opacity:1;}
+  }
+  .node.warn{background:var(--warn); animation-name:node-pulse-warn;}
+  @keyframes node-pulse-warn{
+    0%,100%{box-shadow:0 0 0 0 rgba(242,179,61,0.55); opacity:0.55;}
+    50%{box-shadow:0 0 0 7px rgba(242,179,61,0); opacity:1;}
+  }
+  .stream-line{opacity:0; animation:stream-in 0.5s ease forwards;}
+  @keyframes stream-in{ to{opacity:1;} }
+  .blink-cursor::after{content:'█'; color:var(--ok); margin-left:4px; animation:blink 1s step-start infinite;}
+  @keyframes blink{50%{opacity:0;}}
+
+  /* Sparkline bars */
+  .spark-bar{
+    animation:spark-grow 1.4s ease forwards;
+    transform-origin:bottom;
+  }
+  @keyframes spark-grow{ from{transform:scaleY(0);} to{transform:scaleY(1);} }
+
+  /* Bento discipline cards */
+  .bento-card{
+    border:1px solid var(--line);
+    transition:border-color .35s ease, background-color .35s ease;
+    overflow:hidden;
+  }
+  .bento-card:hover, .bento-card.is-open{
+    border-color:var(--crimson);
+    background:linear-gradient(180deg, rgba(200,16,46,0.07), transparent 60%);
+  }
+  .bento-detail{
+    max-height:0; overflow:hidden; opacity:0;
+    transition:max-height .45s ease, opacity .3s ease, margin .3s ease;
+  }
+  .bento-card:hover .bento-detail, .bento-card.is-open .bento-detail{
+    max-height:260px; opacity:1; margin-top:1rem;
+  }
+  .bento-icon{
+    transition:transform .35s ease, color .35s ease;
+  }
+  .bento-card:hover .bento-icon, .bento-card.is-open .bento-icon{
+    color:var(--crimson); transform:translateY(-3px);
+  }
+
+  /* Sector tabs */
+  .sector-tab{ border:1px solid var(--line); color:var(--ink-mute); transition:all .3s ease; }
+  .sector-tab.active{ border-color:var(--crimson); color:var(--ink); background:rgba(200,16,46,0.08); }
+
+  /* Glass calculator */
+  .glass-card{
+    background:linear-gradient(160deg, rgba(255,255,255,0.045), rgba(255,255,255,0.015));
+    border:1px solid rgba(255,255,255,0.09);
+    backdrop-filter:blur(14px);
+    box-shadow:0 25px 60px -25px rgba(0,0,0,0.65);
+  }
+  select.industrial-select{ background-color:#161616; border:1px solid var(--line); color:var(--ink); }
+  select.industrial-select:focus{border-color:var(--crimson);}
+
+  .btn-crimson{ background:var(--crimson); transition:background .25s ease, transform .2s ease; }
+  .btn-crimson:hover{ background:#a80d26; transform:translateY(-1px); }
+  .btn-outline{ border:1px solid var(--ink-mute); transition:all .25s ease; }
+  .btn-outline:hover{ border-color:#fff; color:#fff; }
+
+  ::selection{background:var(--crimson); color:#fff;}
+  .status-chip{ font-family:'JetBrains Mono',monospace; font-size:0.72rem; letter-spacing:0.05em; }
+
+  #scrollTopBtn{ opacity:0; pointer-events:none; transition:opacity .3s ease, transform .3s ease; }
+  #scrollTopBtn.show{opacity:1; pointer-events:auto;}
+
+  /* Mobile menu */
+  #mobileMenu{ max-height:0; overflow:hidden; transition:max-height .4s ease; }
+  #mobileMenu.open{max-height:1200px;}
+</style>
+</head>
+<body class="antialiased">
+
+<!-- ============ NAV ============ -->
+<header class="sticky top-0 z-50 bg-[#121212]/95 backdrop-blur border-b hairline">
+  <div class="max-w-[1500px] mx-auto px-6 md:px-10 flex items-center justify-between h-20">
+    <a href="#top" class="flex items-center gap-3 shrink-0">
+      <!-- INSERT ATTACHED LOGO FILE HERE -->
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAABDCAYAAAA1Wi+TAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6Q0I2OUE5NzkxMEY3MTFFRTgxQ0VENjc3RTM3RTJFMjMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6Q0I2OUE5N0ExMEY3MTFFRTgxQ0VENjc3RTM3RTJFMjMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDQjY5QTk3NzEwRjcxMUVFODFDRUQ2NzdFMzdFMkUyMyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpDQjY5QTk3ODEwRjcxMUVFODFDRUQ2NzdFMzdFMkUyMyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pvz+U6kAABHbSURBVHja7F0JlFZVHb/fDMwCAwMM27CFKCCYC5oLKq7gUphLJplHM0tDT5bWMfXYqWzTyjYUE5fEFjVLUylRUsRUwFDUVFAEBUJBYZgFGJiBYbq/8/3u+e68ect9797h+5h5/3P+53vf29+9v/ff732ZJaPHi5T2KuomuTu5XHJPyWVc7iG5r+T+kntzWzm5lP97cj8cU8L1pTxvseQiMv7vltwiuVXyTvIuyU2St0veRt4ieau2brPkDyTXcD24TvIOcoc2TkqFQ90Jth7a8nDJQyT34f+B5AEEbiXBW8ljComaCOpayRslr5b8Ptfh922+AHXcNwX0XkgVlJL4rdIAC4AO4//hlLS9KUmjCFKzUfImSsBmrlPc4sOtPBa/GW1ZSehiviC6FC/R1pXxOcKolM82xGcbpP86yR9KXib5v5LfIOjX8r5TQBcQ9SZIPyF5BDt1lOT9JA8ieCsCjm2h1ILa/ohcR8lWr3U2QNzAdbX8VSpemQXNBE+rxbMUE8Cl1BLqZRxMbTFI0xyD+axVbIMgKmK7gI/S1r8r+SXJi/j7SpwbzaQ2tBUVsxOrJQ+VPFbyIZSwA/hb4SNNN1ESvacBdr0G3Gbaq7sJTGV/FlMIVVCCDyBX0SQp4/YiTeoWa+vUckbbp5XXUayurST5Dr4oG3l/WzUzYQP39dIgAnUoX+KD+WKP5K8p4ZrPSn5e8jOSl6eAdkeQrJ8kkNBhEyWP4XJfbT9IyncIgk0E7Rv8raeUbSYASwmqDB23wZqEw0vSj9yL6r03wVxO8JbloR12EuRb+Sw11BLQJitoG6/iC7vFc+xotiNe+k9JPiwGwFcR1A/xNwV0DFMBDb2/5H0JPIBsAoHWQnCigd+ilIJq/1jySslvalJLqeWhBGglwT+U0mow11USsJ3BBGxllGMz2+Ndtski/uomx1gKhhMln8kXN4pqKbV/JPm1FNA5NdyD4AVID5A8jqBSgOtOyfM/yS9T8uzSJG8dt2O/8eycYTzPcJ6/n2YWZCKkXjPNiwbt/CoctoX2chOlYxOPaeJx27WwWrPmFGY8QOvmce7KPKwiLL1471WaBiqldkiqFTbQZEFbzpc8j8+pfDm031TJ0/myRxEcyhmSf9FVAZ0hgEcReKXsOOW176LU/UDkYq0KRANoEyppewhZxXIrCIRSjxevOnGT9qvitrVU1x8TvI2a7eqNUqhIxe490E4qBq1HOEpo5gxj+1WzLZSTO5z7ZwyvsZ3PDnA/JvlxSnTB854r+VpeL4zQHn+S/E22YZcCdJEmaRRgiwjK7gRMT5obE2hu9KLJUc39lCOlQk5rNfW6niGoBoK2lgBu8ACzdQ8Bs6OFgwL8YM3Zg3Y6XPJBfMFLDM7VRO0HM+JeyUs0YH9f8sUGWgGgvhzarCsBGhKmP0HbjyCFmjuaJoeK5RZrHfEhbUDl7GyiZNlMoDY6CIl1Ni1YRmGAdj1V8qGUtN0Mwf1nyb8U2dg06HzJv6bpE0bXSL6lMwK6mODtranFStrKE7iujIBcR1DW01Z+h7xOJAzsp9SOYI6cI3kKHcB+BsegT74neSZ9huMl/5HnCiKYilM6C6AzNCeqqeqG8o3uT5NhO6WrsmkB2DUpaPc4nSL5Ijp/lQb7PyD5SmrF4yQ/Qkc1iK7rLIDuRqetr2anbqHkrad9nFJhAftqyacZ7PssJTycvksk3xOy79OdBdBFmteb0t5DsHt/IqKLqm6V/A328wLJkwL2W1bUSRpmdwrmvZIQQ55G5zuMEME4mX388zBNXZS2aUp5pr9LvkBko0hhJuV0Lv9b8qtBUZIU0CkVAi2g89cQsg8q8kZyn4UB+3yUAjqlQqF/Sr47ZDuqGkdzOUiav5YCOv+ObFcmb6ocCZR3QtprAJfX+2xHZOv5fFV3IVuHMJtfEY0pGJDNQ1y5jusQe0bKtSXGOZFgWRnSiHEIyZxjRDaxs1O0Lwwq4b29KLKJA1z7BO63PaCDTZxh1JHUUw3vibg6Sgcm8nmbLO4Z9/oc20IR8gOPimwdR5gQaPbZhhLdl/MFaMQfH2JHNIh4ZZOtBAMC88gm3cz1Z0m+TdvHtKGf5v3Yxqoni2yRjd/19f8IPyEMtYOOzhkJ7lkHRxHBMZkA6Wg6g32XSXjPipAkme+zfo7kbwdgQgmvigDnckO+AN1L5IqF+lqcR88aFYeosjBCofkRIluva2M+nBZyff0/QIwiHJSF/kZk6x1KEgKjSIsCnL0HAI3rTdPuNSmY8ewzhP/AWITwUG8+xucYFd6r9mxDJvFBvOD5suNcDWXX1VVSCYvU+EmW94FzHG+473iRC0HNp2RxQQDaPh3cb6iFOcXBeR4IeflQ+LXaZ72qs8FLtK9nGzTe2/l0TDIdcB4bkwG2rM0UACiZHBtj/6/RaxeUVC5e8MHCLJVsQ+eJ8IGvptL59xFCqsZnPQbLbqPwOFBbv4aA7nSetk0JJ4r1D7Y4/qSYfsB+BIegM/e4ozb4vGg7yMAlIcIw1cF57pe8OIFG/xuXR7O/lBD7jsgNDkhDRyRU5R1tYW4kOfZSRmaUymx08ByTqG06gmDrj7M8B5y6P0Ts01O0r6hbxOgQaIrI1avfTwdVpIBuT6eLZINU1ejluIQQ4zlcfoFevy3h/s/3OMguqJz3amsqPmrgfCN65R16NUtkQ3Uwd87iOqS/rwnyklPKTlEwJsFxR7HDk9AXRW4kBiIf2x08xwk0aVwSJPNxjqRzVBEZNJ4+09JTkudqzwYBguFtN4hsbXsK6AAalqDTyi1VPF4GFYde4CjiMdxB1MZPe1VZnuNfIlvbbCJY+nAZ8fVfiWyuAlrnEq7/gQbyTgtoF0X8J8dUq4hsHGp5zS+zAyG57nJgSxfR4Sx31K4D6GzaUIMeiYi495O1/7eL7HQHyobH3B13imxkSHR2QLsYqHpETHUNiV5hec2jNbvwedqZtnSkyKanXdCxwi4CBHpGmCWuoCVVPB9TSuhzbnyX0ZGro96IzkIuYtsjYkYsIDVcTGE7nRIVWuYOYT+1bLnIhQVtaZrl8fALZgqzOhMIlFFsB8y1sY7rr6VdfWGUBktt6PaEmgiT+SQgySc4uuaRVKcuIx6we6stz4HpHWyTNfMMbWcIhq9w+SaRLScV1A5XkFea2CyphG5LU0T4cHl9v0EO7x9FS71pOsF23OpA21xgeQ7MYFRpcTyk8m3CbHjcJL48T4rsvHWC5hzi9T+T/ISpA9FZKKrRXhfhw3wUAaQmceWJBu33MCWNSYdCSk/VpPSTDtpkqoVz2I9S3jayYVIwhQgGBstibhRMc6DKQ5HOn8MXXHRFQAc5hnAwkBj4umg/xasfnRJhdoygvRdGmPjkeslXiehBoKovpmtO5p3CPi59mIVzeIwDZxD+wE6D/RCOQ9HWV0V2TmilcdFuT8UN8XQFQiXWe1RbCw2jFwNDtiN+vG/EOVBwvoZ23/oYURYlFVGn/Q/L58bLkTTkhsiLzfzTj1FCRxGcwMtpZszT1reKBCHMrgJo3R591WD/0SJ47gcF+Kg0+eua6mwwvM9SapFidugsB1J6MkETh/D8n7G4Ju79HoN7L2EEAybWDBcd3VUAvVlbxqTbJmGxIwPap69o+02QMEAr2hDjXlGK+jkuP2PqDEVEY6bEPAYRl/4W18Q9LzBw4ifSNPuR8B9WlQI6gDZqy/gQzceGkm1gAOCiaj5qRNsQ0/vCPPEDJ+5Lmg1/i8jWAdsQYtKm8fIy7p+0wEllPLcYALqGUZCNrjq6q0Q56rRlAG2FwfkQg50QAPSoTycs91xjrYg3s9NkTeUvpqdvQ3DwTOs7cN0DLa41j/a/SX+96dGeKaA9dlurgQ0NMv1U2Ik+0vNwg+PgDNZ7NEScWhNI5wtFLrY+Q9hlD0sZ5TGRup+1cAbR/nc70CgpoEOoxcdbftHQ2TrdI40PMQS01/H8MAEgPy1yWbpFDmxpAHpIxD5jqB2SEqbpmpvPzu4KgG72ATS+WlprcOxYT7QDEjvq66mNPoBeE9MxVFL1Ms32/W2MaIkfwck7O2KfswxAH0Q7aA83poDuWGryUYHISC01OBZgOpXLfbTlMFor2mck6wnquAQpfawm/WyzhxjNEpTKRtrdZswgtMij+e7srgDoHT6SrSWGHQ1nCl8FQOG5SSWe+piQ93pJPHnY0qg6q6B9epewi0sjcTMxZNvhFm2METe7UkC7o10BkYTtAaoacWKTtOz+tF9RAmky5vBNHwewRZilv4OcNAW0BZZSUE2IUxwgvZM6g/8R7uYXyTugi4SbmuAklDGUHn6Afkvk6m3DCCBG0flBBvvuDjBlsH61xTNeSbDhpb3DUhLiBfFmDkeL5MO24KMgK7i1EABtInHUV0bVl0f1L4zC7hpJJ+svwjzW6uozaLs9HZ8JAHSdz/r3CWqXsw0hproqxLZOSiiWwuBQpIiRGMIcFV9IeK596Ny+63F2RyY8H74r+HChqGkAui8dHvUdvyo6DuqzvkO5Tn3fb6BoXweMgYwP5sk+jnpJdgj/uCjMgGXCzeQpuv28IgTsLSJZBg5tj7rghXRyZ4tsejypZryI52imkLrU4pnvEXmMO/sB+ndUp30I7iR2VKnIzUZpQj0c3HurR80FlY82BqzH/ostQOZH0FSbArYhTLhB5CaXiUvn0SmElEYm7q8iOw1CEkLm8Fs0X66k9E9CeMEeKiRHCvbvOHK1hVMwIaYZcYCDe2/0OFrdAoAZFhddbGkKeCkspY76kTUW50bfXKZpl1mGTm0Q3UhH7ocW57itkKSzArQL7xQZtBMM94UZc66Da9aK3OdzBTWMnw0dViSD+PByR225jRI6iLYaOqFhhGyfGliAbKdNvXSJsJtTBMmjJ0WBEQD9hoPzwIT4qYgu2gGh/nWEg2t+4JGIQfOu1UTY4IscteVGzwvmZ7PbFuL0pImgzndrHqMLtwuzbOseB/TLwqz6LIpQI3yfyH0Hw48wt8JVjuzneSIX7+0lcjNSxgG0sqNdEKr4Vods3ymSx6J1ghOrkiMYTT0nD7gBZh4TBUgANNLATzg6H2oFFki+TmTHs6EuADHOaWz4Gx05YPUedXtwgF0O4NdFnAvhq/ccOYQtES/hOgfXgWl1ifZ/lsEzuqa7hMMaZteAhpR6ULQtd7QhDHb8sciOtlhCW282JYurzCS8fD11jaq4ygCpGFXQg45Zank/zRHmhm4muRiZMVXkRqY/J8zmvXBFMFHnigIlBbBXCDpXVEyADaEJUubw3I2UEEoaIuR4UcC+u0R09VejA0BvE2ZjFTcIu4o5RYO1iAdopjAbze6C7qBWL2hAo+NvokQtdJop2o4Ohl0+LMQRM/ncw+vCLnuJUd0mIblah5rwTJFLx0MbPrUH2h5m1SOFDA7dBMBcu9OFz5y7BUQwX27R/mPivrBh+nhRTarTlom2qeC4tNTQ42+k2eGCBnmktG1c2oTuFfHruvMGaNUx5zhyklzTUpoWaoDrxSL3jcIw29YEaADZW5Z2pUkdyxZhl1zxEjKF4zS/Yl4Htj/a575CV99+TtpCOh2PF9B9zqGKVS/aVbSjoyZVNHEK1X6vJbw3aIG3YziPmxy2C0oVrtD+3+zI6fSj2aIA484mgAYtpypHcfmKPN4fJNoNvBcV8kICB9+E7mYIINMhQYsSquzVIlsDHcfedknQVGpO6xc6SBBBA925F/hXoWE0gAGjjU+nRFws4g3Ft6GNBO0kAriJywhRXR/jPDuF+eDU1Qntw5UiXnx5peO2quBLX65FIZocX+MBR9GZDicTKQc1jwGaiFXvT2ChngBzN4x0eC+wLV+i4/cspZ6KPCA5g9j2KNqKiF5EFff3odQ1jSqgPhoftcE4vhrDa0Dlz42p5vFc8wlAJERsEk14YasooavZV89RGODTDpuF3TTDPdgvs8VeQpklo8cnOQ6pZsSXMWEh6jIQbx7GXwAJcWeUlHanFlAJnF3s/B0iN7vQKkrH5VTHftVb6LTh3G4StcjwZQ2qhQ6iMj5bs4gO46lrbI0pEXFcpch9dD5x37FNu1NKbxa5uo4SPsdOy/MX8dka9xZA/1+AAQA7jDeb/Yz+UQAAAABJRU5ErkJggg==" alt="JMV LPS Limited logo"
+           class="h-12 w-auto object-contain">
+      <div class="leading-tight hidden sm:block">
+        <div class="font-display font-bold text-lg tracking-wide2 text-white">JMV LPS LTD</div>
+        <div class="font-mono text-[10px] tracking-wide3 text-[var(--ink-mute)] uppercase">Infrastructure Intelligence</div>
+      </div>
+    </a>
+
+    <nav class="hidden xl:flex items-center gap-8 font-medium text-sm text-[var(--ink-mute)]">
+
+      <!-- Core IoT Systems dropdown -->
+      <div class="nav-item">
+        <button class="flex items-center gap-1.5 hover:text-white transition-colors py-2">
+          Core IoT Systems <i class="fa-solid fa-chevron-down nav-caret"></i>
+        </button>
+        <div class="nav-panel w-64 py-4">
+          <a href="#sensing" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">RFMS</a>
+          <a href="#sensing" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">DAS</a>
+          <a href="#sensing" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">RDPMS</a>
+          <a href="#sensing" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">ELP Monitoring</a>
+          <a href="#sensing" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">Digital Earthing</a>
+          <a href="#sensing" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">Battery Health (TMMS)</a>
+        </div>
+      </div>
+
+      <!-- Industrial Solutions mega-menu -->
+      <div class="nav-item">
+        <button class="flex items-center gap-1.5 hover:text-white transition-colors py-2">
+          Industrial Solutions <i class="fa-solid fa-chevron-down nav-caret"></i>
+        </button>
+        <div class="nav-panel left-1/2 -translate-x-1/2 w-[720px] grid grid-cols-4 gap-8 p-8">
+          <div>
+            <div class="mega-col-title mb-4">Electrical Safety</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="#dna" class="hover:text-white transition-colors">Earthing &amp; Bonding</a></li>
+              <li><a href="#dna" class="hover:text-white transition-colors">Lightning Protection</a></li>
+              <li><a href="#dna" class="hover:text-white transition-colors">Surge Protection Devices</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="mega-col-title mb-4">Cable Laying</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="#dna" class="hover:text-white transition-colors">Polyolefin Ducts</a></li>
+              <li><a href="#dna" class="hover:text-white transition-colors">Composite Ducts</a></li>
+              <li><a href="#dna" class="hover:text-white transition-colors">Specialised Cable Ducts</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="mega-col-title mb-4">Railway Infrastructure</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="#sectors" class="hover:text-white transition-colors">Signalling Products</a></li>
+              <li><a href="#sectors" class="hover:text-white transition-colors">Telecom Products</a></li>
+              <li><a href="#sectors" class="hover:text-white transition-colors">Loco Propulsion Systems</a></li>
+            </ul>
+          </div>
+          <div>
+            <div class="mega-col-title mb-4">Security Systems</div>
+            <ul class="space-y-2.5 text-sm">
+              <li><a href="#sectors" class="hover:text-white transition-colors">Surveillance IP Cameras</a></li>
+              <li><a href="#sectors" class="hover:text-white transition-colors">Mobile NV Recorder</a></li>
+              <li><a href="#sectors" class="hover:text-white transition-colors">Field Deployable Tablets</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Corporate Vault dropdown -->
+      <div class="nav-item">
+        <button class="flex items-center gap-1.5 hover:text-white transition-colors py-2">
+          Corporate Vault <i class="fa-solid fa-chevron-down nav-caret"></i>
+        </button>
+        <div class="nav-panel w-56 py-4">
+          <a href="#vault" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">About JMV</a>
+          <a href="#vault" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">Catalogues</a>
+          <a href="#vault" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">Compliance Letters</a>
+          <a href="#vault" class="block px-5 py-2.5 hover:bg-white/5 hover:text-white transition-colors">Careers</a>
+        </div>
+      </div>
+
+      <a href="#contact" class="hover:text-white transition-colors">Contact Us</a>
+    </nav>
+
+    <div class="flex items-center gap-4">
+      <a href="#contact" class="hidden md:inline-flex items-center gap-2 border border-[var(--crimson)] text-[var(--crimson)] hover:bg-[var(--crimson)] hover:text-white transition-colors px-5 py-2.5 text-xs font-semibold tracking-wide2 uppercase font-mono">
+        Request Technical Briefing <i class="fa-solid fa-arrow-right text-[10px]"></i>
+      </a>
+      <button id="mobileMenuBtn" class="xl:hidden text-white" aria-label="Open menu" aria-expanded="false">
+        <i class="fa-solid fa-bars text-xl"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="xl:hidden border-t hairline bg-[#121212]">
+    <div class="px-6 py-5 space-y-5 text-sm">
+      <div>
+        <div class="mega-col-title mb-2">Core IoT Systems</div>
+        <div class="flex flex-wrap gap-x-4 gap-y-2 text-[var(--ink-mute)]">
+          <a href="#sensing">RFMS</a><a href="#sensing">DAS</a><a href="#sensing">RDPMS</a>
+          <a href="#sensing">ELP Monitoring</a><a href="#sensing">Digital Earthing</a><a href="#sensing">Battery Health</a>
+        </div>
+      </div>
+      <div>
+        <div class="mega-col-title mb-2">Industrial Solutions</div>
+        <div class="flex flex-wrap gap-x-4 gap-y-2 text-[var(--ink-mute)]">
+          <a href="#dna">Earthing &amp; Bonding</a><a href="#dna">Lightning Protection</a><a href="#dna">Surge Protection</a>
+          <a href="#sectors">Signalling Products</a><a href="#sectors">Telecom Products</a><a href="#sectors">Loco Propulsion</a>
+          <a href="#sectors">IP Cameras</a><a href="#sectors">Mobile NV Recorder</a><a href="#sectors">Field Tablets</a>
+        </div>
+      </div>
+      <div>
+        <div class="mega-col-title mb-2">Corporate Vault</div>
+        <div class="flex flex-wrap gap-x-4 gap-y-2 text-[var(--ink-mute)]">
+          <a href="#vault">About JMV</a><a href="#vault">Catalogues</a><a href="#vault">Compliance Letters</a><a href="#vault">Careers</a>
+        </div>
+      </div>
+      <a href="#contact" class="block text-white font-medium">Contact Us</a>
+      <a href="#contact" class="btn-crimson inline-flex text-white px-5 py-3 font-mono text-xs tracking-wide2 uppercase font-semibold">Request Technical Briefing</a>
+    </div>
+  </div>
+
+  <!-- ============ CREDENTIALS MARQUEE ============ -->
+  <div class="bg-[#0A0A0A] border-t hairline overflow-hidden py-2.5">
+    <div class="ticker-track font-mono text-[11px] tracking-wide2 uppercase text-white/80 whitespace-nowrap">
+      <span id="ticker-source" class="flex items-center">
+        <span>RDSO Approved Infrastructure</span><span class="ticker-dot"></span>
+        <span>BIS Certified</span><span class="ticker-dot"></span>
+        <span>Make In India Since 2008</span><span class="ticker-dot"></span>
+        <span>15+ Years on Indian Railways</span><span class="ticker-dot"></span>
+        <span>100+ PSUs &amp; Defence Agencies</span><span class="ticker-dot"></span>
+      </span>
+    </div>
+  </div>
+</header>
+
+<main id="top">
+
+<!-- ============ HERO ============ -->
+<section class="grid-texture border-b hairline">
+  <div class="max-w-[1500px] mx-auto px-6 md:px-10 py-16 md:py-24 grid lg:grid-cols-2 gap-14 items-center">
+
+    <div class="text-left">
+      <div class="inline-flex items-center gap-2 border hairline px-3 py-1 mb-7">
+        <span class="w-1.5 h-1.5 rounded-full bg-[var(--ok)]"></span>
+        <span class="font-mono text-[11px] tracking-wide2 uppercase text-[var(--ink-mute)]">Command Center Online</span>
+      </div>
+
+      <h1 class="font-display font-bold text-[2.6rem] leading-[1.08] md:text-6xl md:leading-[1.05] tracking-wide2 text-white">
+        Engineering India's Core<br>
+        <span class="text-[var(--crimson)]">Infrastructure Intelligence.</span>
+      </h1>
+
+      <p class="mt-7 text-[var(--ink-mute)] text-lg leading-relaxed max-w-xl">
+        Automated real-time asset tracking, distributed fiber sensing, and electrical safety
+        engineering — designed, fabricated, and validated entirely under one roof in Noida.
+        For fifteen years, the systems watching India's railways, defence perimeters,
+        and power grids have been built here.
+      </p>
+
+      <div class="mt-9 flex flex-wrap items-center gap-4">
+        <a href="#contact" class="btn-crimson text-white px-7 py-3.5 font-mono text-xs tracking-wide2 uppercase font-semibold">
+          Schedule Technical Demo
+        </a>
+        <a href="#dna" class="btn-outline text-[var(--ink-mute)] px-7 py-3.5 font-mono text-xs tracking-wide2 uppercase font-semibold">
+          Explore Solutions
+        </a>
+      </div>
+
+      <div class="mt-12 grid grid-cols-3 gap-6 max-w-md border-t hairline pt-7">
+        <div>
+          <div class="font-display font-bold text-2xl text-white">50KM+</div>
+          <div class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)] mt-1">Fiber Sensing Deployed</div>
+        </div>
+        <div>
+          <div class="font-display font-bold text-2xl text-white">2008</div>
+          <div class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)] mt-1">Manufacturing Since</div>
+        </div>
+        <div>
+          <div class="font-display font-bold text-2xl text-white">100+</div>
+          <div class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)] mt-1">PSU &amp; Defence Clients</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SIGNATURE TERMINAL -->
+    <div class="terminal-shell relative rounded-sm overflow-hidden">
+      <div class="terminal-scanline"></div>
+
+      <div class="flex items-center justify-between px-5 py-3 border-b border-[#22344f]">
+        <div class="flex items-center gap-2 font-mono text-[11px] text-white/70 tracking-wide2 uppercase">
+          <span class="w-2 h-2 rounded-full bg-[var(--ok)] animate-pulse"></span>
+          Asset Protection Dashboard
+        </div>
+        <div class="flex gap-1.5">
+          <span class="w-2.5 h-2.5 rounded-full bg-[#2c3e50]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[#2c3e50]"></span>
+          <span class="w-2.5 h-2.5 rounded-full bg-[var(--crimson)]"></span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-5">
+        <div class="col-span-2 border-r border-[#22344f] p-5 h-[300px] relative">
+          <div class="radar-wrap">
+            <div class="radar-ring" style="width:90%;height:90%;"></div>
+            <div class="radar-ring" style="width:64%;height:64%;"></div>
+            <div class="radar-ring" style="width:36%;height:36%;"></div>
+            <div class="radar-sweep"></div>
+            <span class="node" style="top:22%;left:60%;"></span>
+            <span class="node" style="top:64%;left:30%;"></span>
+            <span class="node" style="top:40%;left:75%;"></span>
+            <span class="node warn" style="top:75%;left:66%;"></span>
+            <span class="node" style="top:50%;left:50%;"></span>
+          </div>
+          <div class="absolute bottom-3 left-5 font-mono text-[10px] text-[var(--ink-mute)] tracking-wide2 uppercase">
+            Sensor Grid — Sector 07
+          </div>
+        </div>
+
+        <div class="col-span-3 p-5 font-mono text-[11.5px] leading-loose h-[300px] overflow-hidden flex flex-col">
+          <div class="flex-1">
+            <div class="stream-line text-[var(--ok)]" style="animation-delay:.1s">[SYSTEM OK] DAS Status: Active</div>
+            <div class="stream-line text-white/60" style="animation-delay:.5s">[TELEMETRY] RFMS Node 14 — Signal Nominal</div>
+            <div class="stream-line text-[var(--ok)]" style="animation-delay:.9s">[SYSTEM OK] Fault Localisation: Nominal</div>
+            <div class="stream-line text-white/60" style="animation-delay:1.3s">[TELEMETRY] RDPMS Grid Sync — 99.98% Uptime</div>
+            <div class="stream-line text-[var(--ok)]" style="animation-delay:1.7s">[SYSTEM OK] Digital Earthing Array: All Zones Green</div>
+            <div class="stream-line text-white/40" style="animation-delay:2.1s">root@jmv-scada:~$<span class="blink-cursor"></span></div>
+          </div>
+          <!-- Sparkline graph -->
+          <div class="flex items-end gap-1 h-12 mt-3">
+            <div class="spark-bar w-full bg-[var(--ok)]/70" style="height:35%;animation-delay:.2s"></div>
+            <div class="spark-bar w-full bg-[var(--ok)]/70" style="height:55%;animation-delay:.3s"></div>
+            <div class="spark-bar w-full bg-[var(--ok)]/70" style="height:40%;animation-delay:.4s"></div>
+            <div class="spark-bar w-full bg-[var(--warn)]/80" style="height:70%;animation-delay:.5s"></div>
+            <div class="spark-bar w-full bg-[var(--ok)]/70" style="height:50%;animation-delay:.6s"></div>
+            <div class="spark-bar w-full bg-[var(--ok)]/70" style="height:65%;animation-delay:.7s"></div>
+            <div class="spark-bar w-full bg-[var(--ok)]/70" style="height:45%;animation-delay:.8s"></div>
+            <div class="spark-bar w-full bg-[var(--ok)]/70" style="height:60%;animation-delay:.9s"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-4 border-t border-[#22344f] font-mono text-[10px] uppercase tracking-wide2">
+        <div class="px-4 py-3 border-r border-[#22344f] text-[var(--ink-mute)]">Uptime<div class="text-white text-sm normal-case tracking-normal font-semibold">99.98%</div></div>
+        <div class="px-4 py-3 border-r border-[#22344f] text-[var(--ink-mute)]">Nodes<div class="text-white text-sm normal-case tracking-normal font-semibold">1,240</div></div>
+        <div class="px-4 py-3 border-r border-[#22344f] text-[var(--ink-mute)]">Alerts<div class="text-[var(--ok)] text-sm normal-case tracking-normal font-semibold">0 Active</div></div>
+        <div class="px-4 py-3 text-[var(--ink-mute)]">Sync<div class="text-white text-sm normal-case tracking-normal font-semibold">Live</div></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ============ FOUR DISCIPLINES BENTO GRID ============ -->
+<section id="dna" class="border-b hairline">
+  <div class="max-w-[1500px] mx-auto px-6 md:px-10 py-20">
+    <div class="flex items-end justify-between flex-wrap gap-4 mb-12">
+      <div>
+        <div class="font-mono text-[11px] tracking-wide3 uppercase text-[var(--crimson)] mb-3">Engineering DNA</div>
+        <h2 class="font-display font-bold text-3xl md:text-4xl text-white tracking-wide2">Four Disciplines. One Roof.</h2>
+      </div>
+      <p class="max-w-sm text-[var(--ink-mute)] text-sm leading-relaxed">
+        Every JMV system is built by combining these four capabilities in-house —
+        no subcontracted black boxes, no outsourced firmware.
+      </p>
+    </div>
+
+    <div class="grid md:grid-cols-2 xl:grid-cols-4 gap-5" id="bento-grid">
+
+      <div class="bento-card cursor-pointer px-6 py-7" data-bento>
+        <i class="fa-solid fa-bolt bento-icon text-2xl text-[var(--ink-mute)]"></i>
+        <h3 class="font-display font-semibold text-xl text-white mt-4">Electrical Engineering</h3>
+        <p class="text-[var(--ink-mute)] text-sm mt-2 leading-relaxed">Grounding, surge, and lightning protection engineered to national grid tolerances.</p>
+        <div class="bento-detail font-mono text-[11px] text-[var(--ink-mute)] space-y-2 border-t hairline pt-4">
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> CDEGS Grounding Simulation</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> IEC 62305 Risk Modelling</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Digital Earthing Monitoring</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> HV/LV Surge Arrestor Design</div>
+        </div>
+      </div>
+
+      <div class="bento-card cursor-pointer px-6 py-7" data-bento>
+        <i class="fa-solid fa-microchip bento-icon text-2xl text-[var(--ink-mute)]"></i>
+        <h3 class="font-display font-semibold text-xl text-white mt-4">Electronics &amp; Embedded</h3>
+        <p class="text-[var(--ink-mute)] text-sm mt-2 leading-relaxed">Field-hardened hardware, designed and assembled entirely in-house.</p>
+        <div class="bento-detail font-mono text-[11px] text-[var(--ink-mute)] space-y-2 border-t hairline pt-4">
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> In-house PCB Assembly</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Ruggedised Enclosures (IP65+)</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Embedded Sensor Firmware</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> RF &amp; Fiber Interfacing</div>
+        </div>
+      </div>
+
+      <div class="bento-card cursor-pointer px-6 py-7" data-bento>
+        <i class="fa-solid fa-diagram-project bento-icon text-2xl text-[var(--ink-mute)]"></i>
+        <h3 class="font-display font-semibold text-xl text-white mt-4">Software &amp; AI</h3>
+        <p class="text-[var(--ink-mute)] text-sm mt-2 leading-relaxed">Predictive models turning raw telemetry into operational decisions.</p>
+        <div class="bento-detail font-mono text-[11px] text-[var(--ink-mute)] space-y-2 border-t hairline pt-4">
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Predictive AI/ML Models</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Real-time SCADA Dashboards</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> DAS Signal Classification</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Central Command Data Fusion</div>
+        </div>
+      </div>
+
+      <div class="bento-card cursor-pointer px-6 py-7" data-bento>
+        <i class="fa-solid fa-gears bento-icon text-2xl text-[var(--ink-mute)]"></i>
+        <h3 class="font-display font-semibold text-xl text-white mt-4">Mechanical Engineering</h3>
+        <p class="text-[var(--ink-mute)] text-sm mt-2 leading-relaxed">Precision fabrication for enclosures, mounts, and field hardware.</p>
+        <div class="bento-detail font-mono text-[11px] text-[var(--ink-mute)] space-y-2 border-t hairline pt-4">
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> CNC Precision Fabrication</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Weatherproof Cabinets</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Vibration &amp; Shock Testing</div>
+          <div class="flex gap-2"><i class="fa-solid fa-caret-right text-[var(--crimson)] mt-0.5"></i> Rail &amp; Pipeline Mounts</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTOR WORKSPACES ============ -->
+<section id="sectors" class="bg-[var(--bg-panel)] border-b hairline">
+  <div class="max-w-[1500px] mx-auto px-6 md:px-10 py-20">
+    <div class="mb-10">
+      <div class="font-mono text-[11px] tracking-wide3 uppercase text-[var(--crimson)] mb-3">Sector Workspaces</div>
+      <h2 class="font-display font-bold text-3xl md:text-4xl text-white tracking-wide2">Built For What You Operate.</h2>
+    </div>
+
+    <div class="flex flex-wrap gap-3 mb-8" id="sector-tabs">
+      <button class="sector-tab active px-5 py-2.5 font-mono text-xs uppercase tracking-wide2" data-sector="rail">Railways &amp; Metro</button>
+      <button class="sector-tab px-5 py-2.5 font-mono text-xs uppercase tracking-wide2" data-sector="defence">Defence Perimeters</button>
+      <button class="sector-tab px-5 py-2.5 font-mono text-xs uppercase tracking-wide2" data-sector="oilgas">Oil &amp; Gas Pipelines</button>
+      <button class="sector-tab px-5 py-2.5 font-mono text-xs uppercase tracking-wide2" data-sector="telecom">Telecom Networks</button>
+    </div>
+
+    <div id="sector-panel" class="terminal-shell relative rounded-sm overflow-hidden p-8 md:p-10 grid md:grid-cols-3 gap-8">
+      <!-- filled by JS -->
+    </div>
+  </div>
+</section>
+
+<!-- ============ LIGHTNING RISK / COMPLIANCE CALCULATOR ============ -->
+<section id="sensing" class="border-b hairline grid-texture">
+  <div class="max-w-[1500px] mx-auto px-6 md:px-10 py-20 grid lg:grid-cols-5 gap-12">
+
+    <div class="lg:col-span-2">
+      <div class="font-mono text-[11px] tracking-wide3 uppercase text-[var(--crimson)] mb-3">Sensing Ecosystem</div>
+      <h2 class="font-display font-bold text-3xl md:text-4xl text-white tracking-wide2 leading-tight">
+        Smart Compliance &amp; Risk Calculator
+      </h2>
+      <p class="mt-5 text-[var(--ink-mute)] text-sm leading-relaxed max-w-md">
+        A first-pass estimate of exposure class and IEC 62305 compliance posture for a facility archetype —
+        run before a full CDEGS grounding study.
+      </p>
+      <div class="mt-8 flex items-center gap-3 font-mono text-xs text-[var(--ink-mute)]">
+        <i class="fa-solid fa-shield-halved text-[var(--crimson)]"></i> RDSO &amp; IEC 62305 Aligned Methodology
+      </div>
+    </div>
+
+    <div class="lg:col-span-3 glass-card rounded-sm p-8 md:p-10">
+      <div class="grid sm:grid-cols-2 gap-6">
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)] block mb-2">Facility Archetype</label>
+          <select id="facility" class="industrial-select w-full px-4 py-3 text-sm">
+            <option value="1">Railway Signalling Yard</option>
+            <option value="2">Metro Traction Substation</option>
+            <option value="3">Defence Perimeter Post</option>
+            <option value="4">Oil &amp; Gas Pumping Station</option>
+            <option value="5">Telecom Tower Cluster</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)] block mb-2">Structure Height</label>
+          <select id="height" class="industrial-select w-full px-4 py-3 text-sm">
+            <option value="1">Ground-level (&lt; 8m)</option>
+            <option value="2">Mid-rise (8 – 25m)</option>
+            <option value="3">Tower / Mast (&gt; 25m)</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="grid sm:grid-cols-2 gap-6 mt-6">
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)] block mb-2">Peak Fault Current Expectation</label>
+          <select id="faultcurrent" class="industrial-select w-full px-4 py-3 text-sm">
+            <option value="1">&lt; 10 kA</option>
+            <option value="2">10 – 25 kA</option>
+            <option value="3">25 – 50 kA</option>
+            <option value="4">&gt; 50 kA</option>
+          </select>
+        </div>
+        <div>
+          <label class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)] block mb-2">Soil Resistivity Zone</label>
+          <select id="soil" class="industrial-select w-full px-4 py-3 text-sm">
+            <option value="1">Low (Coastal / Alluvial)</option>
+            <option value="2">Moderate (Mixed Terrain)</option>
+            <option value="3">High (Rocky / Arid)</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="runscan" class="btn-crimson w-full mt-8 text-white py-4 font-mono text-xs tracking-wide2 uppercase font-semibold">
+        Run Compliance &amp; Risk Scan
+      </button>
+
+      <div id="scanresult" class="hidden mt-7 border-t hairline pt-6">
+        <div class="flex items-center justify-between flex-wrap gap-4">
+          <div>
+            <div class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)]">Estimated Risk Class</div>
+            <div id="riskclass" class="font-display font-bold text-2xl mt-1"></div>
+          </div>
+          <div id="riskchip" class="status-chip px-3 py-1.5 border"></div>
+        </div>
+        <p id="riskrecommendation" class="text-[var(--ink-mute)] text-sm mt-4 leading-relaxed"></p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer id="vault" class="bg-[var(--bg-footer)]">
+  <div class="max-w-[1500px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-4 gap-12">
+
+    <div>
+      <!-- INSERT ATTACHED LOGO FILE HERE -->
+      <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAABDCAYAAAA1Wi+TAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyJpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuMy1jMDExIDY2LjE0NTY2MSwgMjAxMi8wMi8wNi0xNDo1NjoyNyAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENTNiAoV2luZG93cykiIHhtcE1NOkluc3RhbmNlSUQ9InhtcC5paWQ6Q0I2OUE5NzkxMEY3MTFFRTgxQ0VENjc3RTM3RTJFMjMiIHhtcE1NOkRvY3VtZW50SUQ9InhtcC5kaWQ6Q0I2OUE5N0ExMEY3MTFFRTgxQ0VENjc3RTM3RTJFMjMiPiA8eG1wTU06RGVyaXZlZEZyb20gc3RSZWY6aW5zdGFuY2VJRD0ieG1wLmlpZDpDQjY5QTk3NzEwRjcxMUVFODFDRUQ2NzdFMzdFMkUyMyIgc3RSZWY6ZG9jdW1lbnRJRD0ieG1wLmRpZDpDQjY5QTk3ODEwRjcxMUVFODFDRUQ2NzdFMzdFMkUyMyIvPiA8L3JkZjpEZXNjcmlwdGlvbj4gPC9yZGY6UkRGPiA8L3g6eG1wbWV0YT4gPD94cGFja2V0IGVuZD0iciI/Pvz+U6kAABHbSURBVHja7F0JlFZV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" alt="JMV LPS Limited logo"
+           class="h-12 w-auto object-contain mb-5">
+      <p class="font-mono text-xs text-[var(--ink-mute)] leading-relaxed">
+        Registered Office<br>
+        JMV LPS Limited<br>
+        Sector 63, Noida,<br>
+        Uttar Pradesh – 201301, India
+      </p>
+      <div class="flex gap-4 mt-6 text-[var(--ink-mute)] text-lg">
+        <a href="#" class="hover:text-white transition-colors" aria-label="LinkedIn"><i class="fa-brands fa-linkedin"></i></a>
+        <a href="#" class="hover:text-white transition-colors" aria-label="YouTube"><i class="fa-brands fa-youtube"></i></a>
+        <a href="#" class="hover:text-white transition-colors" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+      </div>
+    </div>
+
+    <div>
+      <div class="font-mono text-[11px] uppercase tracking-wide2 text-white mb-5">Deep-Tech IoT Portals</div>
+      <ul class="space-y-3 text-sm text-[var(--ink-mute)]">
+        <li><a href="#sensing" class="hover:text-white transition-colors">RFMS</a></li>
+        <li><a href="#sensing" class="hover:text-white transition-colors">DAS</a></li>
+        <li><a href="#sensing" class="hover:text-white transition-colors">RDPMS</a></li>
+        <li><a href="#sensing" class="hover:text-white transition-colors">Digital Earthing</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="font-mono text-[11px] uppercase tracking-wide2 text-white mb-5">Hardware Engineering Units</div>
+      <ul class="space-y-3 text-sm text-[var(--ink-mute)]">
+        <li><a href="#dna" class="hover:text-white transition-colors">Electrical Safety</a></li>
+        <li><a href="#dna" class="hover:text-white transition-colors">Cable Ducts</a></li>
+        <li><a href="#sectors" class="hover:text-white transition-colors">Signalling</a></li>
+      </ul>
+    </div>
+
+    <div>
+      <div class="font-mono text-[11px] uppercase tracking-wide2 text-white mb-5">Corporate Governance</div>
+      <ul class="space-y-3 text-sm text-[var(--ink-mute)]" id="contact">
+        <li><a href="#" class="hover:text-white transition-colors">RDSO Approvals</a></li>
+        <li><a href="#" class="hover:text-white transition-colors">Privacy</a></li>
+        <li><a href="#" class="hover:text-white transition-colors">Careers</a></li>
+        <li><a href="#" class="hover:text-white transition-colors">Catalogues</a></li>
+      </ul>
+    </div>
+
+  </div>
+
+  <div class="border-t hairline">
+    <div class="max-w-[1500px] mx-auto px-6 md:px-10 py-6 flex items-center justify-between flex-wrap gap-4">
+      <p class="font-mono text-[11px] text-[var(--ink-mute)]">© 2026 JMV LPS Limited. All rights reserved.</p>
+      <p class="font-mono text-[11px] text-[var(--ink-mute)]">Engineering India's Core Infrastructure Intelligence.</p>
+    </div>
+  </div>
+</footer>
+
+<button id="scrollTopBtn" aria-label="Scroll to top"
+  class="fixed bottom-7 right-7 z-50 w-11 h-11 bg-[var(--crimson)] text-white flex items-center justify-center shadow-lg">
+  <i class="fa-solid fa-arrow-up"></i>
+</button>
+
+<script>
+  // Ticker: duplicate content for seamless loop
+  const tickerTrack = document.querySelector('.ticker-track');
+  tickerTrack.insertAdjacentHTML('beforeend', tickerTrack.innerHTML);
+
+  // Mobile menu toggle
+  const mobileBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  mobileBtn.addEventListener('click', () => {
+    const isOpen = mobileMenu.classList.toggle('open');
+    mobileBtn.setAttribute('aria-expanded', isOpen);
+    mobileBtn.innerHTML = isOpen ? '<i class="fa-solid fa-xmark text-xl"></i>' : '<i class="fa-solid fa-bars text-xl"></i>';
+  });
+
+  // Nav dropdown click-toggle (touch / keyboard support, in addition to hover)
+  document.querySelectorAll('.nav-item > button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.nav-item');
+      const wasOpen = item.classList.contains('js-open');
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('js-open'));
+      if(!wasOpen) item.classList.add('js-open');
+    });
+  });
+  document.addEventListener('click', (e) => {
+    if(!e.target.closest('.nav-item')){
+      document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('js-open'));
+    }
+  });
+
+  // Bento card toggle (for touch devices, in addition to hover)
+  document.querySelectorAll('[data-bento]').forEach(card => {
+    card.addEventListener('click', () => card.classList.toggle('is-open'));
+  });
+
+  // Sector workspace data
+  const sectorData = {
+    rail: {
+      title: 'Railways & Metro', icon: 'fa-train-subway',
+      desc: 'Real-time track and OHE monitoring deployed across zonal railway divisions, engineered to RDSO specifications.',
+      metrics: [['RDSO Approved Tracking','100% Compliant'],['Fiber Sensing Coverage','50KM Active'],['Signalling Yards Monitored','38 Sites']]
+    },
+    defence: {
+      title: 'Defence Perimeters', icon: 'fa-shield-halved',
+      desc: 'Layered intrusion detection for high-security perimeters, integrating fiber sensing with electronic surveillance.',
+      metrics: [['Perimeter Intrusions Blocked','1,140+ YTD'],['Perimeter Length Secured','210KM'],['Response Latency','&lt; 2 sec']]
+    },
+    oilgas: {
+      title: 'Oil & Gas Pipelines', icon: 'fa-oil-well',
+      desc: 'Distributed acoustic sensing for pipeline integrity, third-party intrusion, and leak-precursor detection.',
+      metrics: [['Pipeline Length Monitored','320KM'],['Leak-Precursor Detections','99.2% Accuracy'],['Third-Party Intrusion Alerts','24/7 Live']]
+    },
+    telecom: {
+      title: 'Telecom Networks', icon: 'fa-tower-cell',
+      desc: 'Grounding and surge protection systems safeguarding tower infrastructure against lightning-induced faults.',
+      metrics: [['Towers Under Protection','640+ Sites'],['Surge Events Mitigated','2,300+ YTD'],['Earthing Compliance','IEC 62305']]
+    }
+  };
+
+  function renderSector(key){
+    const d = sectorData[key];
+    const panel = document.getElementById('sector-panel');
+    panel.innerHTML = `
+      <div class="md:col-span-1 flex flex-col justify-between">
+        <div>
+          <i class="fa-solid ${d.icon} text-3xl text-[var(--crimson)] mb-4"></i>
+          <h3 class="font-display font-bold text-2xl text-white">${d.title}</h3>
+          <p class="text-[var(--ink-mute)] text-sm mt-3 leading-relaxed">${d.desc}</p>
+        </div>
+      </div>
+      <div class="md:col-span-2 grid sm:grid-cols-3 gap-4">
+        ${d.metrics.map(m => `
+          <div class="border border-[#22344f] p-5 bg-black/20">
+            <div class="font-mono text-[10px] uppercase tracking-wide2 text-[var(--ink-mute)]">${m[0]}</div>
+            <div class="font-display font-bold text-xl text-[var(--ok)] mt-2">${m[1]}</div>
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+  renderSector('rail');
+
+  document.querySelectorAll('.sector-tab').forEach(tab => {
+    tab.addEventListener('click', () => {
+      document.querySelectorAll('.sector-tab').forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      renderSector(tab.dataset.sector);
+    });
+  });
+
+  // Lightning risk / compliance calculator
+  document.getElementById('runscan').addEventListener('click', () => {
+    const facility = parseInt(document.getElementById('facility').value, 10);
+    const fault = parseInt(document.getElementById('faultcurrent').value, 10);
+    const soil = parseInt(document.getElementById('soil').value, 10);
+    const height = parseInt(document.getElementById('height').value, 10);
+
+    const score = facility + fault + soil + height;
+    let cls, chipText, chipClass, rec;
+
+    if(score <= 6){
+      cls = 'Class III — Moderate Exposure';
+      chipText = 'ADVISORY';
+      chipClass = 'border-[var(--warn)] text-[var(--warn)]';
+      rec = 'Standard earthing and surge arrestor provisioning is likely sufficient. A desktop IEC 62305 review is recommended before sign-off.';
+    } else if(score <= 9){
+      cls = 'Class II — Elevated Exposure';
+      chipText = 'REVIEW REQUIRED';
+      chipClass = 'border-[var(--crimson)] text-[var(--crimson)]';
+      rec = 'Site conditions warrant a full CDEGS grounding simulation and staged surge protection design ahead of commissioning.';
+    } else {
+      cls = 'Class I — Critical Exposure';
+      chipText = 'PRIORITY ENGAGEMENT';
+      chipClass = 'border-[var(--crimson)] text-white bg-[var(--crimson)]';
+      rec = 'This archetype falls in our highest-priority engineering tier. We recommend an on-site JMV assessment within 30 days.';
+    }
+
+    document.getElementById('riskclass').textContent = cls;
+    document.getElementById('riskclass').style.color = score > 9 ? 'var(--crimson)' : (score > 6 ? '#fff' : 'var(--ok)');
+    const chip = document.getElementById('riskchip');
+    chip.textContent = chipText;
+    chip.className = 'status-chip px-3 py-1.5 border ' + chipClass;
+    document.getElementById('riskrecommendation').textContent = rec;
+    document.getElementById('scanresult').classList.remove('hidden');
+  });
+
+  // Scroll to top
+  const scrollBtn = document.getElementById('scrollTopBtn');
+  window.addEventListener('scroll', () => {
+    if(window.scrollY > 600) scrollBtn.classList.add('show');
+    else scrollBtn.classList.remove('show');
+  });
+  scrollBtn.addEventListener('click', () => window.scrollTo({top:0, behavior:'smooth'}));
+</script>
+
+</body>
+</html>
